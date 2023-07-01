@@ -31,14 +31,11 @@
             </div>
             <!-- Navbar Right Side -->
             <div class="navbar-nav">
-              {% if current_user.is_authenticated %}
-                <a class="nav-item nav-link" href="{{ url_for('new_post') }}">New Post</a>
-                <a class="nav-item nav-link" href="{{ url_for('account') }}">Account</a>
-                <a class="nav-item nav-link" href="{{ url_for('logout') }}">Logout</a>
-              {% else %}
-                <a class="nav-item nav-link" href="{{ url_for('login') }}">Login</a>
-                <a class="nav-item nav-link" href="{{ url_for('register') }}">Register</a>
-              {% endif %}
+                <a class="nav-item nav-link" href="{{ url_for('about') }}">New Post</a>
+                <a class="nav-item nav-link" href="{{ url_for('about') }}">Account</a>
+                <a class="nav-item nav-link" href="{{ url_for('about') }}">Logout</a>
+                <a class="nav-item nav-link" href="https://tripjournal.auth.us-east-1.amazoncognito.com/login?client_id=4toip7p3akct3ftrcsal0knhnn&response_type=code&scope=email+openid+phone&redirect_uri=http%3A%2F%2Flocalhost%3A5000%2Fcallback.html">Login</a>
+                <a class="nav-item nav-link" href="https://tripjournal.auth.us-east-1.amazoncognito.com/signup?client_id=4toip7p3akct3ftrcsal0knhnn&response_type=code&scope=email+openid+phone&redirect_uri=http%3A%2F%2Flocalhost%3A5000%2Fcallback.html">Register</a>
             </div>
           </div>
         </div>
