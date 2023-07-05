@@ -1,26 +1,23 @@
 import pymysql
-import aws_credentials as rds
+from config import DB_PORT, DB_PWD, DB_USER, DB_NAME, DB_HOST_WRITE, DB_HOST_READ
 
 conn = pymysql.connect(
-    host=rds.host,  # endpoint link
-    port=rds.port,  # 3306
-    user=rds.user,  # admin
-    password=rds.password,  # adminadmin
-    db=rds.db,  # test
+    host=DB_HOST_WRITE,  # endpoint link
+    port=DB_PORT,  # 3306
+    user=DB_USER,  # admin
+    password=DB_PWD,  # adminadmin
+    db=DB_NAME,  # test
 
 )
 
 
 # Table Creation
-# cursor=conn.cursor()
-# create_posts="""
-# create table Posts (title varchar(200),description varchar(20000),image varchar(200), author varchar(200), date datetime)
-#
-# """
-# create_images="""
-# create table Images (author varchar(200), post varchar(200), count int, image image)
-#"""
-# cursor.execute(create_table)
+cursor = conn.cursor()
+create_posts = """
+create table posts (id int, title varchar(200),author varchar(200),description varchar(20000),images varchar(2000), date datetime)
+
+ """
+cursor.execute(create_posts)
 
 import mysql.connector
 import config

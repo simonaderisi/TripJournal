@@ -4,6 +4,7 @@ from sqlalchemy import desc
 from tripJournal.model import Post
 import os
 import base64
+from tripJournal.config import DB_PORT, DB_PWD, DB_USER, DB_HOST_READ, DB_HOST_WRITE, DB_NAME
 '''
 from PIL import Image
 from flaskblog import app, db, bcrypt
@@ -11,7 +12,7 @@ from flaskblog.forms import RegistrationForm, LoginForm, UpdateAccountForm, Post
 from flaskblog.models import User, Post
 from flask_login import login_user, current_user, logout_user, login_required
 '''
-
+id_post = 0
 posts = [
     {
         'author': 'Corey Schafer',
@@ -72,7 +73,37 @@ def about():
 
 from tripJournal.config import S3_BUCKET
 
+def get_database_connection():
+    "Build a database connection"
+    conn = db.connector.connect(user=DB_USER, password=DB_PWD,
+                                   host=DB_HOST_WRITE,
+                                   database=DB_NAME,
+                                   use_pure=True) # see https://bugs.mysql.com/90585
+    return conn
 
+@app.route('/create_post', methods=['GET', 'POST'])
+#@login_required
+def create_post():
+    if request.method == 'POST':
+        images = []
+        for i, image in enumerate(request.files.getlist('images')):
+            filename = str(id_post) + str(i) + image.filename.split('.')[1]
+            upload_file_to_s3(image, S3_BUCKET, filename)
+            file_url = f"https://{S3_BUCKET}.s3.amazonaws.com/{filename}"
+            images.append(file_url)
+        conn = get_database_connection()
+        cursor = conn.cursor(dictionary=True)
+        cursor.execute("""INSERT INTO posts (id, title, author,description, images, date) VALUES
+            (%s, %s, %s, %s);""", (id_post, request.form.get('title'), request.form.get('author'), request.form.get('description'), images, datetime.now()))
+        conn.commit()
+        cursor.close()
+        conn.close()
+        flash("Posted!")
+        return redirect(url_for('homepage'))
+    # Se il metodo HTTP non è POST, restituisci la pagina di creazione del post
+    return render_template('create_post.html')
+
+'''
 @app.route('/create_post', methods=['GET', 'POST'])
 #@login_required
 def create_post():
@@ -96,7 +127,7 @@ def create_post():
         return redirect(url_for('homepage'))
     # Se il metodo HTTP non è POST, restituisci la pagina di creazione del post
     return render_template('create_post.html')
-
+'''
 
 @app.route('/delete/<id>', methods=['GET', 'POST'])
 def delete_post(id):
