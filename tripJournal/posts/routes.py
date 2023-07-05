@@ -1,54 +1,42 @@
 from flask import (render_template, url_for, flash,
                    redirect, request, abort, Blueprint)
-from flask_login import current_user, login_required
-from flaskblog.posts.forms import PostForm
+#from flask_login import current_user, login_required
+#from flaskblog.posts.forms import PostForm
+from tripJournal.model import Post
+from datetime import datetime
+from tripJournal import db, app
+from tripJournal.config import S3_BUCKET
 
-@app.route("/post/<int:post_id>")
-def post(post_id):
-    post = Post.query.get_or_404(post_id)
-    return render_template('post.html', title=post.title, post=post)
 
-
-@app.route("/post/<int:post_id>/update", methods=['GET', 'POST'])
+@app.route('/create_post', methods=['GET', 'POST'])
 #@login_required
-def update_post(post_id):
-    post = Post.query.get_or_404(post_id)
-    if post.author != current_user:
-        abort(403)
-    form = PostForm()
-    if form.validate_on_submit():
-        post.title = form.title.data
-        post.content = form.content.data
-        db.session.commit()
-        flash('Your post has been updated!', 'success')
-        return redirect(url_for('post', post_id=post.id))
-    elif request.method == 'GET':
-        form.title.data = post.title
-        form.content.data = post.content
-    return render_template('create_post.html', title='Update Post',
-                           form=form, legend='Update Post')
-
-
-@app.route("/post/<int:post_id>/delete", methods=['POST'])
-#@login_required
-def delete_post(post_id):
-    post = Post.query.get_or_404(post_id)
-    if post.author != current_user:
-        abort(403)
-    db.session.delete(post)
-    db.session.commit()
-    flash('Your post has been deleted!', 'success')
-    return redirect(url_for('home'))
-
-@app.route("/post/new", methods=['GET', 'POST'])
-#@login_required
-def new_post():
-    form = PostForm()
-    if form.validate_on_submit():
-        post = Post(title=form.title.data, content=form.content.data, author=current_user)
+def create_post():
+    if request.method == 'POST':
+        post = Post(
+            title=request.form.get('title'),
+            author=request.form.get('author'),
+            description=request.form.get('description'),
+            images=[],
+            date=datetime.now()
+        )
+        p_id = post.id
+        for i, image in enumerate(request.files.getlist('images')):
+            filename = str(p_id) + str(i) + image.filename.split('.')[1]
+            upload_file_to_s3(image, S3_BUCKET, filename)
+            file_url = f"https://{S3_BUCKET}.s3.amazonaws.com/{filename}"
+            post.images.append(file_url)
         db.session.add(post)
         db.session.commit()
-        flash('Your post has been created!', 'success')
-        return redirect(url_for('home'))
-    return render_template('create_post.html', title='New Post',
-                           form=form, legend='New Post')
+        flash("Posted!")
+        return redirect(url_for('homepage'))
+    # Se il metodo HTTP non è POST, restituisci la pagina di creazione del post
+    return render_template('create_post.html')
+
+
+@app.route('/delete/<id>', methods=['GET', 'POST'])
+def delete_post(id):
+    to_delete = Post.query.get(id)
+    db.session.delete(to_delete)
+    db.session.commit()
+    flash("Book is deleted")
+    return redirect(url_for('homepage'))
