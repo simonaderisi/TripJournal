@@ -1,19 +1,18 @@
 from flask import Flask
 from flask_sqlalchemy import SQLAlchemy
 from flask_login import LoginManager
-from tripJournal.config import DB_PORT, DB_PWD, DB_USER, DB_HOST_READ, DB_HOST_WRITE, DB_NAME
+from tripJournal.config import *
 import pymysql
-from flask_cognito_lib import CognitoAuth
 from flask_awscognito import AWSCognitoAuthentication
 
 app = Flask(__name__)
 
 db = pymysql.connect(
-    host=DB_HOST_WRITE,  # endpoint link
-    port=DB_PORT,  # 3306
-    user=DB_USER,  # admin
-    password=DB_PWD,  # adminadmin
-    db=DB_NAME,  # test
+    host=DB_HOST_WRITE,
+    port=DB_PORT,
+    user=DB_USER,
+    password=DB_PWD,
+    db=DB_NAME,
 
 )
 '''
@@ -37,13 +36,13 @@ login_manager = LoginManager()
 login_manager.init_app(app)
 
 
-app.config["AWS_DEFAULT_REGION"] = "us-east-1"
-app.config["AWS_COGNITO_USER_POOL_ID"] = 'us-east-1_sLBBUGGVu'#'us-east-1_9ZNCQcUAe'
-app.config["AWS_COGNITO_DOMAIN"] = 'travelers3.auth.us-east-1.amazoncognito.com'#'https://travelers2.auth.us-east-1.amazoncognito.com'
-app.config["AWS_COGNITO_USER_POOL_CLIENT_ID"] = '7fghsm2unr6ts1uh36l2hknmoe'#'3ca3ibapboc9mtmi51o990n4dj'
-app.config["AWS_COGNITO_USER_POOL_CLIENT_SECRET"] = '2p90karq14bbe6836mvhb12jh4bmbkiaflc9rbbpjguudmve28k'#'1f03m549inpv2incbq16dv8u73evcg12uf3c21mrskhvohn7h38j'
-app.config["AWS_COGNITO_REDIRECT_URL"] = "http://localhost:5000/callback"
-app.config["AWS_COGNITO_LOGOUT_URL"] = "http://localhost:5000/"
+app.config["AWS_DEFAULT_REGION"] = AWS_REGION
+app.config["AWS_COGNITO_USER_POOL_ID"] = COGNITO_POOL_ID
+app.config["AWS_COGNITO_DOMAIN"] = COGNITO_DOMAIN
+app.config["AWS_COGNITO_USER_POOL_CLIENT_ID"] = COGNITO_CLIENT_ID
+app.config["AWS_COGNITO_USER_POOL_CLIENT_SECRET"] = COGNITO_CLIENT_SECRET
+app.config["AWS_COGNITO_REDIRECT_URL"] = BASE_URL + '/callback'
+app.config["AWS_COGNITO_LOGOUT_URL"] = BASE_URL
 
 aws_auth = AWSCognitoAuthentication(app)
 '''
