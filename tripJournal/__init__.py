@@ -13,12 +13,12 @@ db = pymysql.connect(
     user=DB_USER,
     password=DB_PWD,
     db=DB_NAME,
-
 )
+
 '''
 cursor = db.cursor()
 create_posts = """
-create table posts2 (id int, title varchar(200),author varchar(200),description text,images varchar(2000), date varchar(200))
+create table posts2 (id int, title varchar(200),author varchar(200),description text,images varchar(2000), map varchar(600), date varchar(200))
 
  """
 cursor.execute(create_posts)

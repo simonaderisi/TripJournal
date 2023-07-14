@@ -27,29 +27,12 @@ def get_file_content_from_s3(bucket_name, object_name):
     # Recupera il contenuto del file da S3
     try:
         response = s3_client.get_object(Bucket=bucket_name, Key=object_name)
-        file_content = response["Body"].read().decode("utf-8")
+        file_content = response["Body"].read()
         return file_content
     except Exception as e:
         print(f"Si è verificato un errore durante il recupero del file da S3: {e}")
         return None
 
-'''
-@app.route("/")
-@app.route("/homepage")
-def home():
-    posts = Post.query.with_bind('lettura').order_by(desc(Post.date)).all()
-    return render_template('homepage.html', title='Homepage', posts=posts)
-
-
-@app.route("/callback.html")
-def callback():
-    return render_template("callback.html")
-
-
-@app.route("/about")
-def about():
-    return render_template('about.html', title='About')
-'''
 
 def get_database_connection():
     "Build a database connection"
@@ -63,7 +46,7 @@ def get_database_connection():
 ID_POST = 0
 
 @app.route('/create_post', methods=['GET', 'POST'])
-@login_required
+#@aws_auth.login_required
 def create_post():
     global ID_POST
     if request.method == 'POST':
@@ -81,8 +64,9 @@ def create_post():
         now = datetime.now().strftime("%m/%d/%Y, %H:%M:%S")
 
         print(type(ID_POST))
-        cursor.execute("""INSERT INTO posts (id, title, author, description, images, datte) 
-        VALUES (%s, %s, %s, %s, %s, %s);""", (ID_POST, request.form.get("title"), request.form.get("author"), request.form.get("content"), images, now))
+        cursor.execute("""INSERT INTO posts (id, title, author, description, images, map, datte) 
+        VALUES (%s, %s, %s, %s, %s, %s);""", (ID_POST, request.form.get("title"), request.form.get("author"),
+                                              request.form.get("content"), images, request.form.get('map'), now))
         conn.commit()
         cursor.close()
         conn.close()
@@ -92,47 +76,20 @@ def create_post():
     # Se il metodo HTTP non è POST, restituisci la pagina di creazione del post
     return render_template('create_post.html')
 
-'''
-
-@app.route('/delete/<id>', methods=['GET', 'POST'])
-def delete_post(id):
-    to_delete = Post.query.get(id)
-    db.session.delete(to_delete)
-    db.session.commit()
-    flash("Book is deleted")
-    return redirect(url_for('homepage'))
-'''
 
 
+def get_posts():
+    conn = get_database_connection()
+    cursor = conn.cursor()
 
-def get_file_content_from_s3(bucket_name, object_name):
-    # Crea un oggetto sessione Boto3
-    session = boto3.Session()
-
-    # Ottieni l'oggetto cliente per Amazon S3
-    s3_client = session.client("s3")
-
-    # Recupera il contenuto del file da S3
-    try:
-        response = s3_client.get_object(Bucket=bucket_name, Key=object_name)
-        file_content = response["Body"].read().decode("utf-8")
-        return file_content
-    except Exception as e:
-        print(f"Si è verificato un errore durante il recupero del file da S3: {e}")
-        return None
-
-''' 
-@app.route("/")
-@app.route("/homepage")
-def homepage():
-    return render_template('homepage.html', title='Homepage', posts=posts)
+    cursor.execute("""SELECT * from posts ORDER BY datte""")
+    posts = cursor.fetchall()
+    conn.commit()
+    cursor.close()
+    conn.close()
+    return posts
 
 
-@app.route("/callback.html")
-def callback():
-    return render_template("callback.html")
-
-'''
 @app.route("/about")
 def about():
     return render_template('about.html', title='About')
@@ -165,15 +122,6 @@ def user_loader(session_token):
 def home():
     """Homepage route"""
     return render_template('homepage.html', title='HOME')
-    return render_template_string("""
- {% extends "layout.html" %}
- {% block content %}
- {% if current_user.is_authenticated %}
- <h1> DENTRO </h1>
- {% else %}
- Click <em>login in / sign up<em> to access this site.
- {% endif %}
- {% endblock %}""")
 
 
 @app.route("/login")
